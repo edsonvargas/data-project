@@ -397,7 +397,7 @@ page = html.Div([
 	#  color="primary",
 	#  dark=True	
 	#),
-        html.H2('Estimador de facturación mensual para bebidas gasificadas', style=TEXT_STYLE),
+        html.H2('Pronóstico de facturación mensual para bebidas gasificadas', style=TEXT_STYLE),
 	html.H6('Diplomado en Data Analytics: Proyecto de Análisis de Datos', style=TEXT_STYLE),
 	tabs
     ]
