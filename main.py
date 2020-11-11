@@ -370,7 +370,7 @@ tab2_content = html.Div(
 		dbc.Col(content_pred, style = {'width':'48%','display':'inline-block','top':'15px'})]
 		    )
 
-tab0_content = html.H5('Aquí irá un resumen del proyecto')
+tab0_content = html.Img(src='https://github.com/rasecotineb/data-project/blob/main/assets/objetivo.JPG',style={'width':'20%'}) #html.H5('Aquí irá un resumen del proyecto')
 iframe_page1 = html.Iframe(src="https://datastudio.google.com/embed/reporting/614afda7-1ba7-4372-a9ca-56b450452c00/page/Z2XdB",
 		style={'position':'absolute','top':'0','left':'0','width': '100%','height': '100%'})
 tab_datastudio = html.Div(iframe_page1,style={'position': 'relative','padding-bottom':'56.25%','height': '0','overflow': 'hidden'})
