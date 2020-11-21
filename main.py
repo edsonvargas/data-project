@@ -23,17 +23,28 @@ def generarMetricas(df,value,gastos):
     bv = gastos*(100-precision)/100
     if precision >= 85:
       style_card = CARD_ACCEPTABLE_STYLE
+      resolucion = 'ACEPTABLE'
     else:
-      style_card = CARD_NOT_ACCEPTABLE_STYLE		 
-    return html.P('La precisión para ' + value + ' es: ' + str(precision) + '%, con un BV de: ' +
-			str(bv), style=style_card)
+      style_card = CARD_NOT_ACCEPTABLE_STYLE
+      resolucion = 'NO ACEPTABLE' 			 
+    return html.P(value + ' es un ' + str(precision) + '% preciso, con un BV = S/.' +
+			str(bv) + ' [' + resolucion +'] ', style=style_card)
 
 def generarFacturacion(df_params,cuota,ingreso,check_list):
-    print(df_params['Ing. Bruto  Cuota S/. Mensual'].values[0]) 	
     result = cuota * df_params['Cuota C.U'].values[0] +  ingreso * df_params['Ing. Bruto  Cuota S/. Mensual'].values[0]	
-    result2 = ingreso * df_params['Ing. Neto  Cuota S/.  Mensual'].values[0] + df_params['intercepto'].values[0] 
-    return (result+result2)
+    result2 = ingreso * df_params['Ing. Neto  Cuota S/.  Mensual'].values[0] + df_params['intercepto'].values[0]
+    if check_list is not None: 
+      for i in check_list:
+        result2 = result2 + df_params[i].values[0]
+    return (result+result2)/100
 
+def build_intro():
+    return html.Div(
+        id='intro',
+        children=[
+            html.Img(src='assets/resumen_proyecto.JPG'),
+        ],
+    )
 
 #------------------------------------------Lectura de Datasets ----------------------------------------------------------------------------#
 csv_files_path = os.path.join('data/results_test.csv')
@@ -84,12 +95,12 @@ CARD_TEXT_STYLE = {
 
 CARD_NOT_ACCEPTABLE_STYLE = {
     'textAlign': 'center',
-    'color': '#d40404'
+    'color': '#666666'
 }
 
 CARD_ACCEPTABLE_STYLE = {
     'textAlign': 'center',
-    'color': '#2bba07'
+    'color': '#191970'
 }
 
 controls1 = dbc.FormGroup(
@@ -118,7 +129,7 @@ controls1 = dbc.FormGroup(
             multi=True
         ),
         html.Br(),
-        html.P('Cantidad de Botellas', style=CARD_TEXT_STYLE),
+        html.P('Cantidad de Cajas Unitarias', style=CARD_TEXT_STYLE),
         dcc.RangeSlider(
             id='range_slider',
             min=mincuota,
@@ -170,7 +181,7 @@ controls2 = dbc.FormGroup(
         ),
         html.Br(),	
 	dbc.Row([
-	  dbc.Col(html.P('Número de botellas', style=CARD_TEXT_STYLE),md=6),
+	  dbc.Col(html.P('Número de cajas unitarias', style=CARD_TEXT_STYLE),md=6),
 	  dbc.Col(dbc.Input(id="input_cuota", placeholder="Ingrese cantidad", type="number", value=15),md=6)]),
         html.Br(),
 	dbc.Row([
@@ -249,7 +260,7 @@ content_first_row = dbc.Row([
                 )
             ]
         ),
-        md=9
+        md=8
     ),
     dbc.Col(
         dbc.Card(
@@ -264,7 +275,7 @@ content_first_row = dbc.Row([
             ]
 
         ),
-        md=3
+        md=4
     )
 #    ,dbc.Col(
 #        dbc.Card(
@@ -323,10 +334,12 @@ content_second_pred_row = dbc.Row(
 content_second_row = dbc.Row(
     [
         dbc.Col(
-            dcc.Graph(id='graph_5'), md=9
+            dcc.Graph(id='graph_5'), md=8
         ),
         dbc.Col([
-	    html.Hr(),		
+	    html.Br(),
+	    html.Div("El Business Value (BV), expresa la cantidad de recursos logísticos adicionales en los que incurrirá el negocio luego de 				pronosticar una facturación. El BV ideal es S/. 0, sin embargo, dada la variación del mercado, se permite un 15% de 				gastos adicionales, según la experiencia del negocio", style=CARD_TEXT_STYLE),
+	    html.Br(),			
 	    dbc.Card(
             [
                 dbc.CardBody(
@@ -337,7 +350,7 @@ content_second_row = dbc.Row(
                     ]
                 )
             ]
-            )], md=3
+            )], md=4
         )
     ]
 )
@@ -370,33 +383,50 @@ tab2_content = html.Div(
 		dbc.Col(content_pred, style = {'width':'48%','display':'inline-block','top':'15px'})]
 		    )
 
-tab0_content = html.Img(src='https://github.com/rasecotineb/data-project/blob/main/assets/resumen_proyecto.JPG',style={'width':'20%'}) #html.H5('Aquí irá un resumen del proyecto')
+tab3_recursos = html.Div(
+		[
+		html.Br(),
+		html.H6("Recursos utilizados en esta presentación:", style=CARD_TEXT_STYLE),
+		html.Br(),
+		html.Li("Ruta de Notebook realizado en Colaboratory Google:"),
+		html.A("Ver", href='https://colab.research.google.com/drive/1bzPJdhejIXfb6sDRR4QUbv_r-AgL0uP7?usp=sharing'),
+		html.Li("Ruta de la presentación de proyecto de análisis de datos"),
+		html.A("Ver", href='https://drive.google.com/file/d/1B_AsyMxjRrVN-MgExN0sgVEtU0ZaqlKP/view?usp=sharing'),
+		html.Li("Ruta de repositorio Github de este dashboard"),
+		html.A("Ver", href='https://github.com/edsonvargas/data-project'),
+		html.Li("Tutorial de carga de Dashboard a Google Cloud Platform"),
+		html.A("Ver", href='https://datasciencecampus.github.io/deploy-dash-with-gcp/')],
+		style={'margin-left':'15%'}
+		    )
+
+tab0_content = build_intro()
 iframe_page1 = html.Iframe(src="https://datastudio.google.com/embed/reporting/614afda7-1ba7-4372-a9ca-56b450452c00/page/Z2XdB",
 		style={'position':'absolute','top':'0','left':'0','width': '100%','height': '100%'})
 tab_datastudio = html.Div(iframe_page1,style={'position': 'relative','padding-bottom':'56.25%','height': '0','overflow': 'hidden'})
 iframe_page2 = html.Iframe(src="https://datastudio.google.com/embed/reporting/614afda7-1ba7-4372-a9ca-56b450452c00/page/9eqcB",
 		style={'position':'absolute','top':'0','left':'0','width': '100%','height': '100%'})
 tab_datastudio2 = html.Div(iframe_page2,style={'position': 'relative','padding-bottom':'56.25%','height': '0','overflow': 'hidden'})
+
+subtabs = dcc.Tabs(
+    [
+	dcc.Tab(tab_datastudio,label="Variables categóricas", style =TEXT_STYLE),
+	dcc.Tab(tab_datastudio2,label="Correlación de variables", style =TEXT_STYLE)
+    ]
+)
+
+
 tabs = dcc.Tabs(
     [
         dcc.Tab(tab0_content, label="Resumen de proyecto", style = TEXT_STYLE),
-	dcc.Tab(tab_datastudio,label="Variables categóricas", style =TEXT_STYLE),
-	dcc.Tab(tab_datastudio2,label="Correlación de variables", style =TEXT_STYLE),
-        dcc.Tab(tab1_content, label="Resultados de modelos predictivo", style = TEXT_STYLE),
-        dcc.Tab(tab2_content, label="Cálculo predictivo", style = TEXT_STYLE),
+	dcc.Tab(subtabs,label="Análisis estadístico", style =TEXT_STYLE),
+        dcc.Tab(tab1_content, label="Análisis predictivo", style = TEXT_STYLE),
+        dcc.Tab(tab2_content, label="Interacción de modelos", style = TEXT_STYLE),
+	dcc.Tab(tab3_recursos, label="Recursos Adicionales", style = TEXT_STYLE),
     ]
 )
 
 page = html.Div([
-	html.Img(src='https://www.pucp.edu.pe/wp-content/themes/home-theme/images/logo-pucp.svg',style={'width':'20%'}),
-	#dbc.NavbarSimple(
-	#  children=[
-	#    dbc.NavItem(dbc.NavLink("Colab",href="https://colab.research.google.com"))],
-	#  brand="NavbarSimple",
-	#  brand_href="",
-	#  color="primary",
-	#  dark=True	
-	#),
+	html.Img(src='https://raw.githubusercontent.com/edsonvargas/data-project/main/data/logo-pucp.svg',style={'width':'20%'}),
         html.H2('Pronóstico de facturación mensual para bebidas gasificadas', style=TEXT_STYLE),
 	html.H6('Diplomado en Data Analytics: Proyecto de Análisis de Datos', style=TEXT_STYLE),
 	tabs
@@ -409,88 +439,6 @@ server = app.server
 app.layout = html.Div(page,style={'margin-left':'3%','margin-right':'3%','margin-top':'2%'})
 
 
-
-#@app.callback(
-#    Output('graph_1', 'figure'),
-#    [Input('submit_button', 'n_clicks')],
-#    [State('dropdown', 'value'), State('range_slider', 'value'), State('check_list', 'value'),
-#     State('radio_items', 'value')
-#     ])
-#def update_graph_1(n_clicks, dropdown_value, range_slider_value, check_list_value, radio_items_value):
-#    print(n_clicks)
-#    print(dropdown_value)
-#    print(range_slider_value)
-#    print(check_list_value)
-#    print(radio_items_value)
-#    fig = {
-#        'data': [{
-#            'x': [1, 2, 3],
-#            'y': [3, 4, 5]
-#        }]
-#    }
-#    return fig
-
-
-#@app.callback(
-#    Output('graph_2', 'figure'),
-#    [Input('submit_button', 'n_clicks')],
-#    [State('dropdown', 'value'), State('range_slider', 'value'), State('check_list', 'value'),
-#     State('radio_items', 'value')
-#     ])
-#def update_graph_2(n_clicks, dropdown_value, range_slider_value, check_list_value, radio_items_value):
-#    print(n_clicks)
-#    print(dropdown_value)
-#    print(range_slider_value)
-#    print(check_list_value)
-#    print(radio_items_value)
-#    fig = {
-#        'data': [{
-#            'x': [1, 2, 3],
-#            'y': [3, 4, 5],
-#            'type': 'bar'
-#        }]
-#    }
-#    return fig
-
-
-#@app.callback(
-#    Output('graph_3', 'figure'),
-#    [Input('submit_button', 'n_clicks')],
-#    [State('dropdown', 'value'), State('range_slider', 'value'), State('check_list', 'value'),
-#     State('radio_items', 'value')
-#     ])
-#def update_graph_3(n_clicks, dropdown_value, range_slider_value, check_list_value, radio_items_value):
-#    print(n_clicks)
-#    print(dropdown_value)
-#    print(range_slider_value)
-#    print(check_list_value)
-#    print(radio_items_value)
-#    df = px.data.iris()
-#    fig = px.density_contour(df, x='sepal_width', y='sepal_length')
-#    return fig
-
-
-#@app.callback(
-#    Output('graph_4', 'figure'),
-#    [Input('submit_button', 'n_clicks')],
-#    [State('dropdown', 'value'), State('range_slider', 'value'), State('check_list', 'value'),
-#     State('radio_items', 'value')
-#     ])
-#def update_graph_4(n_clicks, dropdown_value, range_slider_value, check_list_value, radio_items_value):
-#    print(n_clicks)
-#    print(dropdown_value)
-#    print(range_slider_value)
-#    print(check_list_value)
-#    print(radio_items_value)  # Sample data and figure
-#    df = px.data.gapminder().query('year==2007')
-#    fig = px.scatter_geo(df, locations='iso_alpha', color='continent',
-#                         hover_name='country', size='pop', projection='natural earth')
-#    fig.update_layout({
-#        'height': 600
-#    })
-#    return fig
-
-
 @app.callback(
     Output('graph_5', 'figure'),
     [Input('submit_button', 'n_clicks')],
@@ -501,26 +449,8 @@ def update_graph_5(n_clicks, dropdown_value, range_slider_value):
     print(range_slider_value)
     df = data_df[(data_df['Cuota C.U']>=range_slider_value[0]) & (data_df['Cuota C.U']<=range_slider_value[1])]
     fig = px.scatter(df, x='Cuota C.U', y=dropdown_value, range_x=[range_slider_value[0],range_slider_value[1]],
-			range_y=[mintarget,maxtarget],labels={"Cuota C.U": "# Botellas"},)
+			range_y=[mintarget,maxtarget],labels={"Cuota C.U": "# Cajas Unitarias"},color_discrete_map={"Modelo Regresion":"#030f6f","Real":"#A7A7A7","Modelo Ridge":"#49baff","Modelo Lasso":"#0f557f","Modelo Huber":"black"})
     return fig
-
-
-#@app.callback(
-#    Output('graph_6', 'figure'),
-#    [Input('submit_button', 'n_clicks')],
-#    [State('dropdown', 'value'), State('range_slider', 'value'), State('check_list', 'value'),
-#     State('radio_items', 'value')
-#     ])
-#def update_graph_6(n_clicks, dropdown_value, range_slider_value, check_list_value, radio_items_value):
-#    print(n_clicks)
-#    print(dropdown_value)
-#    print(range_slider_value)
-#    print(check_list_value)
-#    print(radio_items_value)  # Sample data and figure
-#    df = px.data.tips()
-
-#    fig = px.bar(df, x='total_bill', y='day', orientation='h')
-#    return fig
 
 
 @app.callback(
@@ -549,25 +479,10 @@ def update_card_title_5(n_clicks, dropdown_value, range_slider_value, gastos_val
 def update_card_title_6(n_clicks, dropdown_value, input_cuota, input_ingreso, check_list):
     print(check_list)
     result = generarFacturacion(parametros_df[parametros_df['algoritmo']==dropdown_value], input_cuota, input_ingreso,check_list)
-    text_salida = 'Para ' + str(input_cuota) + ' botellas, con un ingreso bruto de ' + str(input_ingreso) + ','
-    text_result = ' se estima una facturación de ' + str(result) + ' con el algoritmo ' + dropdown_value
+    text_salida = 'Para ' + str(input_cuota) + ' cajas unitarias, con un ingreso bruto de S/.' + str(input_ingreso) + ','
+    text_result = ' se estima una facturación de S/.' + str(result) + ', con el algoritmo de ' + dropdown_value
     html_salida = html.P(text_salida + text_result)	
     return html_salida
-
-
-#@app.callback(
-#    Output('card_text_1', 'children'),
-#    [Input('submit_button', 'n_clicks')],
-#    [State('dropdown', 'value'), State('range_slider', 'value'), State('check_list', 'value'),
-#     State('radio_items', 'value')
-#     ])
-#def update_card_text_1(n_clicks, dropdown_value, range_slider_value, check_list_value, radio_items_value):
-#    print(n_clicks)
-#    print(dropdown_value)
-#    print(range_slider_value)
-#    print(check_list_value)
-#    print(radio_items_value)  # Sample data and figure
-#    return 'Card text change by call back'
 
 
 if __name__ == '__main__':
